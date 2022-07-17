@@ -1,7 +1,6 @@
 ﻿using envio_correos_batch.Model;
 using System.Net;
 using System.Net.Mail;
-using System.Text;
 
 namespace envio_correos_batch.Services
 {
@@ -27,7 +26,7 @@ namespace envio_correos_batch.Services
 
         public static void SendMail(SendMailRow mailRow, DataModel dataModel)
         {
-            MailMessage mail = new MailMessage
+            MailMessage mail = new()
             {
                 Subject = mailRow.Message,
                 From = new MailAddress(dataModel.ServerMail.User),
@@ -37,9 +36,12 @@ namespace envio_correos_batch.Services
             mail.To.Add(mailRow.Email);
 
             var pdfRoute = string.Format("{0}{1}{2}", dataModel.FileRoutes.PdfRoute, Path.DirectorySeparatorChar, mailRow.PdfFileName);
-            var xmlRoute = string.Format("{0}{1}{2}", dataModel.FileRoutes.XmlRoute, Path.DirectorySeparatorChar, mailRow.XmlFileName);
             mail.Attachments.Add(new Attachment(pdfRoute));
-            mail.Attachments.Add(new Attachment(xmlRoute));
+            if (!string.IsNullOrEmpty(mailRow.XmlFileName))
+            {
+                var xmlRoute = string.Format("{0}{1}{2}", dataModel.FileRoutes.XmlRoute, Path.DirectorySeparatorChar, mailRow.XmlFileName);
+                mail.Attachments.Add(new Attachment(xmlRoute));
+            }
             _smtpServer.Send(mail);
         }
 
