@@ -62,7 +62,7 @@ namespace envio_correos_batch.Views
                 OnlyCancelMessageBox.CloseLast();
                 if (result.Success)
                 {
-                    MessageBox.Show(result.Message, "…xito", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show(result.Message, "√âxito", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 else if (!string.IsNullOrEmpty(result.Message))
                 {
@@ -73,7 +73,7 @@ namespace envio_correos_batch.Views
             {
                 OnlyCancelMessageBox.CloseLast();
                 LogEvent(e.Message);
-                MessageBox.Show("OcurriÛ un error al procesar el archivo", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Ocurri√≥ un error al procesar el archivo", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -85,7 +85,7 @@ namespace envio_correos_batch.Views
 
             if (!isFielValid)
             {
-                return Result.OfError("OcurriÛ un error al leer el archivo.");
+                return Result.OfError("Ocurri√≥ un error al leer el archivo.");
             }
             var success = 0;
             var errors = 0;
@@ -109,7 +109,7 @@ namespace envio_correos_batch.Views
             }
             if (success == 0)
             {
-                return Result.OfError("No se procesÛ ning˙n registro");
+                return Result.OfError("No se proces√≥ ning√∫n registro");
             }
             var messageTemplate = "Total de registros procesados: {0} " + Environment.NewLine +
                 "Total de correos enviados: {1} " + Environment.NewLine +
@@ -124,8 +124,7 @@ namespace envio_correos_batch.Views
             var result = settingsForm.ShowDialog();
             if (result == DialogResult.OK)
             {
-                _dataModel = settingsForm.DataModel;
-                LogEvent("°ConfiguraciÛn actualizada!");
+                SaveNewConfiguration(settingsForm.DataModel);
             }
         }
 
@@ -145,7 +144,7 @@ namespace envio_correos_batch.Views
             }
             if (string.IsNullOrEmpty(_dataModel.ServerMail?.Password))
             {
-                return "No se ha configurado la contraseÒa de la cuenta de correo.";
+                return "No se ha configurado la contrase√±a de la cuenta de correo.";
             }
             if (string.IsNullOrEmpty(_dataModel.FileRoutes?.XmlRoute))
             {
@@ -166,7 +165,7 @@ namespace envio_correos_batch.Views
 
         private void LogReadLineEvent(int index)
         {
-            var eventText = string.Format("Registro #{0}: LeÌdo", index);
+            var eventText = string.Format("Registro #{0}: Le√≠do", index);
             LogEvent(eventText);
         }
 
@@ -182,7 +181,7 @@ namespace envio_correos_batch.Views
         }
         private void LogErrorEvent(int index)
         {
-            var eventText = string.Format("Registro #{0}: OcurriÛ un error al enviar el correo.", index);
+            var eventText = string.Format("Registro #{0}: Ocurri√≥ un error al enviar el correo.", index);
             LogEvent(eventText);
         }
 
@@ -244,6 +243,37 @@ namespace envio_correos_batch.Views
                 return false;
             }
 
+        }
+        private void SaveNewConfiguration(DataModel dataModel)
+        {
+            _dataModel = dataModel;
+            LogEvent("Configuraci√≥n actualizada!");
+            try
+            {
+                FileService.WriteConfigurationFile(dataModel);
+                LogEvent("¬°Configuraci√≥n guardada!");
+            }
+            catch (Exception e)
+            {
+                LogEvent("No se pudo guardar la configuraci√≥n, la siguiente vez que inicie el programa deber√° volver a realizar la configuraci√≥n");
+                LogEvent("Detalle: " + e.Message);
+            }
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            var configFile = FileService.ReadConfigurationFile();
+            if (configFile == null)
+            {
+                _dataModel = new DataModel();
+                LogEvent("Sin configuraci√≥n previa");
+            }
+            else
+            {
+                _dataModel = configFile;
+                LogEvent("Configuraci√≥n previa cargada");
+            }
+            textBoxFileName.Text = _dataModel.FilePath;
         }
     }
 }
